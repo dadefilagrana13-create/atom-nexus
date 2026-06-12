@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Atom Nexus — AI Personal Trainer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>body{font-family:'Inter',sans-serif;}</style>
+</head>
+<body class="bg-gray-950 text-white min-h-screen">
+<nav class="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
+  <div class="flex items-center gap-2"><div class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">💪</div><span class="font-bold text-xl">Atom Nexus</span></div>
+  <div class="flex gap-2">
+    <button onclick="showTab('dashboard')" class="tab-btn px-3 py-2 rounded-lg text-sm bg-red-600 text-white" data-tab="dashboard">Dashboard</button>
+    <button onclick="showTab('workout')" class="tab-btn px-3 py-2 rounded-lg text-sm text-gray-400" data-tab="workout">Workout</button>
+    <button onclick="showTab('ai-coach')" class="tab-btn px-3 py-2 rounded-lg text-sm text-gray-400" data-tab="ai-coach">AI Coach</button>
+    <button onclick="showTab('progress')" class="tab-btn px-3 py-2 rounded-lg text-sm text-gray-400" data-tab="progress">Progress</button>
+  </div>
+</nav>
+
+<!-- DASHBOARD -->
+<div id="tab-dashboard" class="p-6">
+  <h1 class="text-2xl font-bold mb-6">Your Training Hub 🔥</h1>
+  <div class="grid grid-cols-4 gap-4 mb-8">
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5"><p class="text-gray-400 text-sm">Workouts Done</p><p class="text-3xl font-bold mt-1 text-red-400" id="stat-workouts">—</p></div>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5"><p class="text-gray-400 text-sm">This Week</p><p class="text-3xl font-bold mt-1" id="stat-week">—</p></div>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5"><p class="text-gray-400 text-sm">Streak 🔥</p><p class="text-3xl font-bold mt-1 text-orange-400" id="stat-streak">—</p></div>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5"><p class="text-gray-400 text-sm">Total Volume (kg)</p><p class="text-3xl font-bold mt-1 text-green-400" id="stat-volume">—</p></div>
+  </div>
+  <div class="grid grid-cols-2 gap-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+      <h3 class="font-semibold mb-3">Today's Plan</h3>
+      <div id="today-plan" class="space-y-2"></div>
+      <button onclick="showTab('workout')" class="mt-4 w-full bg-red-600 hover:bg-red-700 py-2 rounded-lg text-sm font-medium">Start Workout 🏋️</button>
+    </div>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+      <h3 class="font-semibold mb-3">Recent Workouts</h3>
+      <div id="recent-workouts" class="space-y-2"></div>
+    </div>
+  </div>
+</div>
+
+<!-- WORKOUT LOGGER -->
+<div id="tab-workout" class="p-6 hidden">
+  <h1 class="text-2xl font-bold mb-6">Log Workout 🏋️</h1>
+  <div class="max-w-2xl space-y-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div><label class="text-sm text-gray-400 block mb-1">Workout Type</label>
+          <select id="w-type" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+            <option>Push (Chest/Shoulders/Triceps)</option><option>Pull (Back/Biceps)</option><option>Legs</option><option>Full Body</option><option>Cardio</option><option>HIIT</option><option>Custom</option>
+          </select></div>
+        <div><label class="text-sm text-gray-400 block mb-1">Duration (min)</label><input id="w-duration" type="number" placeholder="60" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm"/></div>
+      </div>
+      <div id="exercises-list" class="space-y-3 mb-4">
+        <div class="exercise-row grid grid-cols-4 gap-2 text-sm">
+          <input type="text" placeholder="Exercise" class="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 col-span-1"/>
+          <input type="number" placeholder="Sets" class="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5"/>
+          <input type="number" placeholder="Reps" class="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5"/>
+          <input type="number" placeholder="Weight(kg)" class="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5"/>
+        </div>
+      </div>
+      <button onclick="addExercise()" class="text-sm text-red-400 hover:text-red-300 mb-4">+ Add Exercise</button>
+      <div><label class="text-sm text-gray-400 block mb-1">Notes / How did it feel?</label><textarea id="w-notes" rows="2" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm resize-none"></textarea></div>
+      <button onclick="saveWorkout()" class="mt-4 w-full bg-red-600 hover:bg-red-700 py-3 rounded-xl font-bold">✅ Save Workout</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI COACH -->
+<div id="tab-ai-coach" class="p-6 hidden">
+  <h1 class="text-2xl font-bold mb-2">Ghost Mode — AI Coach 🤖</h1>
+  <p class="text-gray-400 mb-6">Ask your AI coach anything. Get a personalized training plan.</p>
+  <div class="grid grid-cols-2 gap-6">
+    <div class="space-y-4">
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <h3 class="font-semibold mb-3">Quick Plan Generator</h3>
+        <select id="ai-goal" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm mb-3">
+          <option>Build Muscle</option><option>Lose Fat</option><option>Improve Endurance</option><option>Get Stronger</option><option>Athletic Performance</option>
+        </select>
+        <select id="ai-level" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm mb-3">
+          <option>Beginner (0-1 year)</option><option>Intermediate (1-3 years)</option><option>Advanced (3+ years)</option>
+        </select>
+        <input id="ai-days" type="number" placeholder="Training days per week (e.g. 4)" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm mb-3"/>
+        <textarea id="ai-context" rows="3" placeholder="Any injuries, preferences, equipment available..." class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm resize-none mb-3"></textarea>
+        <button onclick="generatePlan()" class="w-full bg-red-600 hover:bg-red-700 py-2 rounded-lg font-medium">🏋️ Generate Plan</button>
+      </div>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <h3 class="font-semibold mb-3">Ask Ghost Coach</h3>
+        <div id="chat-box" class="h-40 overflow-y-auto mb-3 space-y-2"></div>
+        <div class="flex gap-2">
+          <input id="chat-in" type="text" placeholder="Ask anything..." class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm" onkeydown="if(event.key==='Enter')sendCoachMsg()"/>
+          <button onclick="sendCoachMsg()" class="bg-red-600 px-3 py-2 rounded-lg text-sm">Send</button>
+        </div>
+      </div>
+    </div>
+    <div id="plan-result" class="bg-gray-900 border border-gray-800 rounded-xl p-5 min-h-64"><p class="text-gray-500 text-sm">Your personalized training plan will appear here...</p></div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div id="tab-progress" class="p-6 hidden">
+  <h1 class="text-2xl font-bold mb-6">Progress Tracker 📈</h1>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-4">
+    <h3 class="font-semibold mb-3">Log Measurement</h3>
+    <div class="grid grid-cols-4 gap-3">
+      <div><label class="text-xs text-gray-400 block mb-1">Weight (kg)</label><input id="m-weight" type="number" step="0.1" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm"/></div>
+      <div><label class="text-xs text-gray-400 block mb-1">Body Fat %</label><input id="m-bf" type="number" step="0.1" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm"/></div>
+      <div><label class="text-xs text-gray-400 block mb-1">Chest (cm)</label><input id="m-chest" type="number" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm"/></div>
+      <div><label class="text-xs text-gray-400 block mb-1">Waist (cm)</label><input id="m-waist" type="number" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm"/></div>
+    </div>
+    <button onclick="saveMeasurement()" class="mt-3 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-medium">Save</button>
+  </div>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <h3 class="font-semibold mb-3">History</h3>
+    <div id="measurements-list" class="space-y-2"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://nmulrsbqdeqokvrybapn.supabase.co';
+const SUPABASE_KEY='%%SUPABASE_ANON_KEY%%';
+const GROQ_KEY='%%GROQ_KEY%%';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+function showTab(tab){
+  document.querySelectorAll('[id^="tab-"]').forEach(el=>el.classList.add('hidden'));
+  document.getElementById('tab-'+tab).classList.remove('hidden');
+  document.querySelectorAll('.tab-btn').forEach(btn=>{btn.classList.remove('bg-red-600','text-white');btn.classList.add('text-gray-400');});
+  const a=document.querySelector(`[data-tab="${tab}"]`);a.classList.add('bg-red-600','text-white');a.classList.remove('text-gray-400');
+  if(tab==='dashboard')loadDashboard();
+  if(tab==='progress')loadProgress();
+}
+
+function addExercise(){
+  const row=document.createElement('div');
+  row.className='exercise-row grid grid-cols-4 gap-2 text-sm';
+  row.innerHTML='<input type="text" placeholder="Exercise" class="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 col-span-1"/><input type="number" placeholder="Sets" class="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5"/><input type="number" placeholder="Reps" class="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5"/><input type="number" placeholder="Weight(kg)" class="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5"/>';
+  document.getElementById('exercises-list').appendChild(row);
+}
+
+async function saveWorkout(){
+  const exercises=[];
+  let totalVolume=0;
+  document.querySelectorAll('.exercise-row').forEach(row=>{
+    const inputs=row.querySelectorAll('input');
+    if(inputs[0].value){
+      const sets=parseInt(inputs[1].value)||0,reps=parseInt(inputs[2].value)||0,weight=parseFloat(inputs[3].value)||0;
+      exercises.push({name:inputs[0].value,sets,reps,weight});
+      totalVolume+=sets*reps*weight;
+    }
+  });
+  await sb.from('an_workouts').insert([{type:document.getElementById('w-type').value,duration:parseInt(document.getElementById('w-duration').value)||0,exercises:JSON.stringify(exercises),total_volume:totalVolume,notes:document.getElementById('w-notes').value}]);
+  alert('Workout saved! 💪');loadDashboard();showTab('dashboard');
+}
+
+async function loadDashboard(){
+  const{data}=await sb.from('an_workouts').select('*').order('created_at',{ascending:false});
+  document.getElementById('stat-workouts').textContent=data?.length||0;
+  const week=(data||[]).filter(w=>new Date(w.created_at)>new Date(Date.now()-7*86400000));
+  document.getElementById('stat-week').textContent=week.length;
+  document.getElementById('stat-streak').textContent=Math.min(week.length,7)+'d';
+  const vol=(data||[]).reduce((s,w)=>s+(w.total_volume||0),0);
+  document.getElementById('stat-volume').textContent=Math.round(vol).toLocaleString();
+  const todayPlan=['Push-ups 3×15','Pull-ups 3×10','Squats 4×12','Plank 3×60s'];
+  document.getElementById('today-plan').innerHTML=todayPlan.map(e=>`<div class="flex items-center gap-2 text-sm"><span class="w-4 h-4 border border-gray-600 rounded flex-shrink-0"></span>${e}</div>`).join('');
+  document.getElementById('recent-workouts').innerHTML=(data||[]).slice(0,4).map(w=>`<div class="flex justify-between items-center py-1.5 border-b border-gray-800 text-sm"><span class="text-gray-300">${w.type.split(' ')[0]}</span><span class="text-gray-500">${w.duration}min · ${w.total_volume||0}kg</span></div>`).join('')||'<p class="text-gray-500 text-sm">No workouts yet.</p>';
+}
+
+async function saveMeasurement(){
+  await sb.from('an_measurements').insert([{weight:parseFloat(document.getElementById('m-weight').value)||null,body_fat:parseFloat(document.getElementById('m-bf').value)||null,chest:parseInt(document.getElementById('m-chest').value)||null,waist:parseInt(document.getElementById('m-waist').value)||null}]);
+  loadProgress();
+}
+
+async function loadProgress(){
+  const{data}=await sb.from('an_measurements').select('*').order('created_at',{ascending:false}).limit(10);
+  document.getElementById('measurements-list').innerHTML=(data||[]).map(m=>`<div class="flex gap-6 py-2 border-b border-gray-800 text-sm"><span class="text-gray-500 w-24">${new Date(m.created_at).toLocaleDateString()}</span>${m.weight?`<span>⚖️ ${m.weight}kg</span>`:''} ${m.body_fat?`<span>🔥 ${m.body_fat}%BF</span>`:''} ${m.chest?`<span>💪 ${m.chest}cm</span>`:''}</div>`).join('')||'<p class="text-gray-500 text-sm">No measurements yet.</p>';
+}
+
+async function generatePlan(){
+  const goal=document.getElementById('ai-goal').value,level=document.getElementById('ai-level').value,days=document.getElementById('ai-days').value,ctx=document.getElementById('ai-context').value;
+  const el=document.getElementById('plan-result');
+  el.innerHTML='<p class="text-gray-400 animate-pulse">💪 Generating your plan...</p>';
+  const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Authorization':`Bearer ${GROQ_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Create a ${days}-day/week training plan for:\nGoal: ${goal}\nLevel: ${level}\nNotes: ${ctx}\n\nInclude:\n- Weekly split\n- Exercises with sets/reps for each day\n- Progressive overload tips\n- Recovery advice\n\nBe specific and practical.`}],max_tokens:800})});
+  const data=await res.json();
+  el.innerHTML=`<pre class="whitespace-pre-wrap text-sm text-gray-200 font-sans">${data.choices[0].message.content}</pre>`;
+}
+
+async function sendCoachMsg(){
+  const input=document.getElementById('chat-in'),text=input.value.trim(),box=document.getElementById('chat-box');
+  if(!text)return;
+  box.innerHTML+=`<p class="text-sm bg-gray-800 rounded p-2">${text}</p>`;input.value='';
+  const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Authorization':`Bearer ${GROQ_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'system',content:'You are Ghost, a tough but knowledgeable AI fitness coach. Give direct, practical advice. Max 2-3 sentences.'},{role:'user',content:text}],max_tokens:150})});
+  const data=await res.json();
+  box.innerHTML+=`<p class="text-sm bg-red-900/30 border border-red-800 rounded p-2 text-red-200"><span class="font-bold">Ghost:</span> ${data.choices[0].message.content}</p>`;
+  box.scrollTop=box.scrollHeight;
+}
+
+loadDashboard();
+</script>
+</body>
+</html>
