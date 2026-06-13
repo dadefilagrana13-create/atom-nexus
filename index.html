@@ -5,226 +5,284 @@
 <title>Atom Nexus — AI Personal Trainer</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-  body{font-family:'Inter',system-ui,sans-serif;background:#050a0a;color:#e2e8f0}
-  .glass{background:rgba(255,255,255,.04);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08)}
-  .gradient-text{background:linear-gradient(135deg,#06b6d4,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-  .btn{background:linear-gradient(135deg,#06b6d4,#3b82f6);border:none;padding:11px 26px;border-radius:10px;cursor:pointer;font-weight:700;color:white;transition:all .2s}
-  .btn:hover{transform:translateY(-1px);box-shadow:0 8px 25px rgba(6,182,212,.4)}
-  input,textarea,select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 14px;color:#e2e8f0;width:100%}
-  input:focus,textarea:focus,select:focus{outline:none;border-color:#06b6d4}
-  .workout-card{background:linear-gradient(145deg,rgba(6,182,212,.07),rgba(59,130,246,.04));border:1px solid rgba(6,182,212,.2);border-radius:16px;padding:20px;transition:all .3s}
-  .workout-card:hover{border-color:rgba(6,182,212,.5);transform:translateY(-2px)}
-  .stat-ring{width:80px;height:80px;border-radius:50%;border:3px solid rgba(6,182,212,.3);display:flex;align-items:center;justify-content:center;flex-direction:column}
-  .tab-active{background:rgba(6,182,212,.2);border-bottom:2px solid #06b6d4}
-  .muscle-tag{background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);color:#67e8f9;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600}
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
+*{font-family:'Space Grotesk',sans-serif;box-sizing:border-box;margin:0;padding:0}
+body{background:#05060a;color:#f1f5f9;min-height:100vh}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:#0d0f16;border-right:1px solid rgba(255,255,255,.06);padding:24px 16px;display:flex;flex-direction:column;z-index:10}
+.main{margin-left:220px;min-height:100vh}
+.s-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;padding:4px 8px}
+.s-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#06b6d4,#0ea5e9);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.s-nav{padding:10px 12px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:10px;color:rgba(255,255,255,.4);font-size:14px;font-weight:500;transition:all .2s;margin-bottom:2px}
+.s-nav:hover,.s-nav.active{background:rgba(6,182,212,.12);color:#06b6d4}
+.s-nav .ic{font-size:16px;width:24px;text-align:center}
+.top-bar{background:#0d0f16;border-bottom:1px solid rgba(255,255,255,.05);padding:20px 36px;display:flex;align-items:center;justify-content:space-between}
+.content{padding:32px 36px 60px}
+.panel{display:none}.panel.active{display:block}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat-c{background:#0d0f16;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:20px;position:relative;overflow:hidden}
+.stat-c::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.stat-c.cyan::after{background:linear-gradient(90deg,#06b6d4,#0ea5e9)}
+.stat-c.green::after{background:linear-gradient(90deg,#4ade80,#22c55e)}
+.stat-c.orange::after{background:linear-gradient(90deg,#fb923c,#f97316)}
+.stat-c.purple::after{background:linear-gradient(90deg,#a855f7,#8b5cf6)}
+.stat-val{font-size:28px;font-weight:800;line-height:1}
+.stat-lbl{font-size:12px;color:rgba(255,255,255,.4);margin-top:6px}
+.wk-card{background:#0d0f16;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:20px;margin-bottom:10px;transition:all .2s}
+.wk-card:hover{border-color:rgba(6,182,212,.3)}
+.type-badge{padding:4px 12px;border-radius:7px;font-size:12px;font-weight:700;display:inline-block}
+label{font-size:11px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px;margin-top:12px}
+input,select,textarea{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.07);border-radius:9px;padding:10px 13px;color:#f1f5f9;width:100%;font-size:14px;outline:none;transition:border .2s;font-family:'Space Grotesk',sans-serif}
+input:focus,select:focus,textarea:focus{border-color:rgba(6,182,212,.5)}
+select option{background:#0d0f16}
+.btn-c{background:linear-gradient(135deg,#06b6d4,#0ea5e9);border:none;color:#fff;padding:10px 22px;border-radius:9px;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;font-family:'Space Grotesk',sans-serif}
+.btn-c:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(6,182,212,.3)}
+.btn-g{background:transparent;border:1.5px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);padding:9px 18px;border-radius:9px;font-weight:500;font-size:14px;cursor:pointer;transition:all .2s;font-family:'Space Grotesk',sans-serif}
+.btn-g:hover{border-color:rgba(6,182,212,.5);color:#06b6d4}
+.form-box{background:#0d0f16;border:1px solid rgba(6,182,212,.2);border-radius:14px;padding:24px;margin-bottom:20px;display:none}
+.form-box.open{display:block}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+.ai-out{background:rgba(0,0,0,.4);border:1px solid rgba(6,182,212,.15);border-radius:12px;padding:20px;min-height:240px;font-size:14px;line-height:1.8}
+.progress-ring{position:relative;width:80px;height:80px}
+.ring-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.meas-card{background:#0d0f16;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;margin-bottom:10px}
+.meas-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+.meas-item{background:rgba(255,255,255,.03);border-radius:8px;padding:12px;text-align:center}
 </style>
 </head>
 <body>
-<nav class="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
-  <div class="flex items-center gap-3">
-    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center text-xl">💪</div>
-    <div><h1 class="font-black text-xl gradient-text">Atom Nexus</h1><p class="text-xs text-slate-400">AI Personal Training · Ghost Mode</p></div>
-  </div>
-  <div class="flex gap-2">
-    <button onclick="showTab('workout')" id="tab-workout" class="px-4 py-2 rounded-lg text-sm font-medium tab-active transition-all">💪 Workout</button>
-    <button onclick="showTab('progress')" id="tab-progress" class="px-4 py-2 rounded-lg text-sm font-medium transition-all">📊 Progress</button>
-    <button onclick="showTab('coach')" id="tab-coach" class="px-4 py-2 rounded-lg text-sm font-medium transition-all"><i class="fas fa-robot mr-1"></i>AI Coach</button>
-    <button onclick="showTab('plan')" id="tab-plan" class="px-4 py-2 rounded-lg text-sm font-medium transition-all">📋 Generate Plan</button>
-  </div>
-</nav>
 
-<div class="max-w-6xl mx-auto px-6 py-8">
-
-  <!-- WORKOUT LOG -->
-  <div id="panel-workout">
-    <div class="flex justify-between items-center mb-6">
-      <div><h2 class="text-2xl font-bold">Log Workout</h2><p class="text-slate-400 text-sm">Track every session</p></div>
-      <button onclick="toggleForm('wk-form')" class="btn"><i class="fas fa-plus mr-2"></i>Log Session</button>
-    </div>
-
-    <div id="wk-form" class="hidden glass rounded-2xl p-6 mb-6">
-      <h3 class="font-semibold text-lg mb-4 gradient-text">New Session</h3>
-      <div class="grid grid-cols-4 gap-4">
-        <div><label class="text-xs text-slate-400 mb-1 block">Workout Type</label>
-          <select id="wk-type"><option>Push</option><option>Pull</option><option>Legs</option><option>Full Body</option><option>Cardio</option><option>HIIT</option><option>Core</option><option>Upper Body</option><option>Lower Body</option></select>
-        </div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Duration (min)</label><input id="wk-dur" type="number" placeholder="60"></div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Total Volume (kg)</label><input id="wk-vol" type="number" placeholder="3200"></div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Calories Burned</label><input id="wk-cal" type="number" placeholder="450"></div>
-        <div class="col-span-4"><label class="text-xs text-slate-400 mb-1 block">Exercises (comma separated)</label><input id="wk-ex" placeholder="Bench Press 4x8 80kg, Incline DB 3x10 24kg, Cable Fly 3x12..."></div>
-        <div class="col-span-3"><label class="text-xs text-slate-400 mb-1 block">Notes / How it felt</label><textarea id="wk-notes" rows="2" placeholder="Felt strong, new PR on bench, struggled with shoulders..."></textarea></div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Rating (1-5)</label>
-          <select id="wk-rate"><option value="5">⭐⭐⭐⭐⭐ Amazing</option><option value="4">⭐⭐⭐⭐ Good</option><option value="3">⭐⭐⭐ Average</option><option value="2">⭐⭐ Tough</option><option value="1">⭐ Bad day</option></select>
-        </div>
-      </div>
-      <div class="flex gap-3 mt-4">
-        <button onclick="saveWorkout()" class="btn"><i class="fas fa-dumbbell mr-2"></i>Log it</button>
-        <button onclick="toggleForm('wk-form')" class="px-4 py-2 text-slate-400 hover:text-white text-sm transition-colors">Cancel</button>
-      </div>
-    </div>
-
-    <!-- Stats summary -->
-    <div class="grid grid-cols-4 gap-4 mb-8" id="workout-stats">
-      <div class="glass rounded-xl p-4 text-center"><div class="text-2xl font-black text-cyan-400" id="s-sessions">0</div><div class="text-xs text-slate-400 mt-1">Total Sessions</div></div>
-      <div class="glass rounded-xl p-4 text-center"><div class="text-2xl font-black text-blue-400" id="s-volume">0</div><div class="text-xs text-slate-400 mt-1">Total Volume (kg)</div></div>
-      <div class="glass rounded-xl p-4 text-center"><div class="text-2xl font-black text-purple-400" id="s-calories">0</div><div class="text-xs text-slate-400 mt-1">Calories Burned</div></div>
-      <div class="glass rounded-xl p-4 text-center"><div class="text-2xl font-black text-green-400" id="s-avg-dur">0</div><div class="text-xs text-slate-400 mt-1">Avg Duration (min)</div></div>
-    </div>
-
-    <div id="workouts-list" class="space-y-4"></div>
-  </div>
-
-  <!-- PROGRESS / MEASUREMENTS -->
-  <div id="panel-progress" class="hidden">
-    <div class="flex justify-between items-center mb-6">
-      <div><h2 class="text-2xl font-bold">Body Progress</h2><p class="text-slate-400 text-sm">Track your body measurements</p></div>
-      <button onclick="toggleForm('meas-form')" class="btn"><i class="fas fa-ruler mr-2"></i>Log Measurements</button>
-    </div>
-    <div id="meas-form" class="hidden glass rounded-2xl p-6 mb-6">
-      <div class="grid grid-cols-4 gap-4">
-        <div><label class="text-xs text-slate-400 mb-1 block">Weight (kg)</label><input id="m-weight" type="number" step="0.1" placeholder="75.5"></div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Body Fat (%)</label><input id="m-bf" type="number" step="0.1" placeholder="18"></div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Chest (cm)</label><input id="m-chest" type="number" placeholder="100"></div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Waist (cm)</label><input id="m-waist" type="number" placeholder="82"></div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Hips (cm)</label><input id="m-hips" type="number" placeholder="96"></div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Arms (cm)</label><input id="m-arms" type="number" placeholder="37"></div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Legs (cm)</label><input id="m-legs" type="number" placeholder="58"></div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Notes</label><input id="m-notes" placeholder="Post-cut, morning weight..."></div>
-      </div>
-      <div class="flex gap-3 mt-4">
-        <button onclick="saveMeasurement()" class="btn"><i class="fas fa-save mr-2"></i>Save</button>
-        <button onclick="toggleForm('meas-form')" class="px-4 py-2 text-slate-400 hover:text-white text-sm transition-colors">Cancel</button>
-      </div>
-    </div>
-    <div id="measurements-list" class="space-y-4"></div>
-  </div>
-
-  <!-- AI COACH -->
-  <div id="panel-coach" class="hidden">
-    <div class="mb-6"><h2 class="text-2xl font-bold">AI Coach Analysis</h2><p class="text-slate-400 text-sm">Get personalized feedback on your training</p></div>
-    <div class="grid grid-cols-2 gap-6">
-      <div class="glass rounded-2xl p-6 space-y-4">
-        <div><label class="text-xs text-slate-400 mb-1 block">Your Goal</label>
-          <select id="ai-goal"><option>Build muscle (bulk)</option><option>Lose fat (cut)</option><option>Recomposition</option><option>Strength / Powerlifting</option><option>Athletic performance</option><option>General fitness</option></select>
-        </div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Current Stats</label><textarea id="ai-stats" rows="3" placeholder="e.g. 75kg, 180cm, 18% body fat, training 3x/week for 6 months, bench 80kg, squat 100kg..."></textarea></div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Recent Workout (paste last session)</label><textarea id="ai-workout" rows="3" placeholder="Push day: Bench 4x8 85kg, Incline 3x10 24kg DB, Cable fly 3x15..."></textarea></div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Main Issue / Question</label><input id="ai-issue" placeholder="e.g. Plateau on bench, not recovering well..."></div>
-        <button onclick="getCoaching()" class="btn w-full"><i class="fas fa-brain mr-2"></i>Get AI Coaching</button>
-      </div>
-      <div class="glass rounded-2xl p-6">
-        <h3 class="font-semibold mb-4 gradient-text">Coaching Feedback</h3>
-        <div id="coach-result" class="text-slate-400 text-sm flex flex-col items-center justify-center h-40 opacity-50">
-          <span class="text-4xl mb-3">💪</span><p>Fill in your details to get coaching</p>
-        </div>
-      </div>
+<div class="sidebar">
+  <div class="s-logo">
+    <div class="s-logo-icon">💪</div>
+    <div>
+      <div style="font-size:16px;font-weight:800">Atom Nexus</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px">AI Trainer</div>
     </div>
   </div>
-
-  <!-- GENERATE PLAN -->
-  <div id="panel-plan" class="hidden">
-    <div class="mb-6"><h2 class="text-2xl font-bold">Generate Training Plan</h2><p class="text-slate-400 text-sm">Full personalized program</p></div>
-    <div class="grid grid-cols-2 gap-6">
-      <div class="glass rounded-2xl p-6 space-y-4">
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-xs text-slate-400 mb-1 block">Goal</label>
-            <select id="pl-goal"><option>Muscle Gain</option><option>Fat Loss</option><option>Strength</option><option>Endurance</option><option>Body Recomp</option></select>
-          </div>
-          <div><label class="text-xs text-slate-400 mb-1 block">Days/week</label>
-            <select id="pl-days"><option>3</option><option>4</option><option>5</option><option>6</option></select>
-          </div>
-          <div><label class="text-xs text-slate-400 mb-1 block">Experience Level</label>
-            <select id="pl-level"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
-          </div>
-          <div><label class="text-xs text-slate-400 mb-1 block">Equipment</label>
-            <select id="pl-equip"><option>Full Gym</option><option>Home (dumbbells)</option><option>Bodyweight only</option><option>Barbells & Rack</option></select>
-          </div>
-        </div>
-        <div><label class="text-xs text-slate-400 mb-1 block">Any limitations / injuries?</label><input id="pl-limits" placeholder="e.g. bad knees, shoulder injury..."></div>
-        <button onclick="generatePlan()" class="btn w-full"><i class="fas fa-clipboard-list mr-2"></i>Generate 4-Week Plan</button>
-      </div>
-      <div class="glass rounded-2xl p-6 overflow-y-auto max-h-96">
-        <h3 class="font-semibold mb-4 gradient-text">Your Training Plan</h3>
-        <div id="plan-result" class="text-slate-400 text-sm flex flex-col items-center justify-center h-40 opacity-50">
-          <span class="text-4xl mb-3">📋</span><p>Set preferences to generate your plan</p>
-        </div>
-      </div>
-    </div>
+  <div class="s-nav active" onclick="showNav('workout')" id="nav-workout"><span class="ic">💪</span> Workouts</div>
+  <div class="s-nav" onclick="showNav('progress')" id="nav-progress"><span class="ic">📏</span> Progress</div>
+  <div class="s-nav" onclick="showNav('coach')" id="nav-coach"><span class="ic">🤖</span> AI Coach</div>
+  <div class="s-nav" onclick="showNav('plan')" id="nav-plan"><span class="ic">📋</span> Generate Plan</div>
+  <div style="flex:1"></div>
+  <div style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);border-radius:12px;padding:16px;margin-top:12px">
+    <div style="font-size:13px;font-weight:700;color:#06b6d4;margin-bottom:3px">Ghost Mode 👻</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.35)">Audio coaching active during workouts</div>
   </div>
 </div>
 
-<div id="toast" class="fixed bottom-6 right-6 px-6 py-3 rounded-xl font-semibold hidden z-50 text-white"></div>
+<div class="main">
+  <div class="top-bar">
+    <div>
+      <div style="font-size:22px;font-weight:800" id="panel-title">Workout Log</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.35);margin-top:2px" id="panel-sub">Track every session to unlock insights</div>
+    </div>
+    <button class="btn-c" id="top-cta" onclick="document.getElementById('wk-form').classList.toggle('open')">+ Log Session</button>
+  </div>
+  <div class="content">
+
+    <div class="stat-row">
+      <div class="stat-c cyan"><div class="stat-val" style="color:#06b6d4" id="s-sessions">0</div><div class="stat-lbl">Total Sessions</div></div>
+      <div class="stat-c green"><div class="stat-val" style="color:#4ade80" id="s-volume">0</div><div class="stat-lbl">Total Volume (kg)</div></div>
+      <div class="stat-c orange"><div class="stat-val" style="color:#fb923c" id="s-cal">0</div><div class="stat-lbl">Calories Burned</div></div>
+      <div class="stat-c purple"><div class="stat-val" style="color:#a855f7" id="s-dur">0m</div><div class="stat-lbl">Avg Duration</div></div>
+    </div>
+
+    <!-- WORKOUT -->
+    <div id="panel-workout" class="panel active">
+      <div class="form-box" id="wk-form">
+        <div style="font-size:16px;font-weight:700;margin-bottom:16px;color:#06b6d4">New Session</div>
+        <div class="g4" style="margin-bottom:4px">
+          <div><label>Workout Type</label><select id="wk-type"><option>Push</option><option>Pull</option><option>Legs</option><option>Upper Body</option><option>Full Body</option><option>Cardio</option><option>HIIT</option><option>Core</option></select></div>
+          <div><label>Duration (min)</label><input id="wk-dur" type="number" placeholder="65"></div>
+          <div><label>Volume (kg total)</label><input id="wk-vol" type="number" placeholder="4200"></div>
+          <div><label>Calories</label><input id="wk-cal" type="number" placeholder="480"></div>
+        </div>
+        <label>Exercises Performed</label>
+        <input id="wk-ex" placeholder="Bench 4×8 80kg, Incline DB 3×10 24kg, Cable Fly 3×15 15kg..." style="margin-bottom:8px">
+        <div class="g2" style="margin-bottom:4px">
+          <div><label>Notes / Feeling</label><textarea id="wk-notes" rows="2" placeholder="New PR on bench! Felt strong on pull movements..."></textarea></div>
+          <div><label>Session Rating</label><select id="wk-rate"><option value="5">⭐⭐⭐⭐⭐ Beast mode</option><option value="4">⭐⭐⭐⭐ Solid session</option><option value="3">⭐⭐⭐ Average</option><option value="2">⭐⭐ Tough day</option><option value="1">⭐ Bad day</option></select></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button class="btn-c" onclick="saveWorkout()">Log Session</button>
+          <button class="btn-g" onclick="document.getElementById('wk-form').classList.remove('open')">Cancel</button>
+        </div>
+      </div>
+      <div id="workouts-list"></div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div id="panel-progress" class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div></div>
+        <button class="btn-c" onclick="document.getElementById('meas-form').classList.toggle('open')">+ Log Measurements</button>
+      </div>
+      <div class="form-box" id="meas-form">
+        <div class="g4" style="margin-bottom:4px">
+          <div><label>Weight (kg)</label><input id="m-w" type="number" step=".1" placeholder="78.5"></div>
+          <div><label>Body Fat %</label><input id="m-bf" type="number" step=".1" placeholder="16"></div>
+          <div><label>Chest (cm)</label><input id="m-ch" type="number" placeholder="102"></div>
+          <div><label>Waist (cm)</label><input id="m-wa" type="number" placeholder="83"></div>
+          <div><label>Hips (cm)</label><input id="m-hi" type="number" placeholder="97"></div>
+          <div><label>Arms (cm)</label><input id="m-ar" type="number" placeholder="38"></div>
+          <div><label>Legs (cm)</label><input id="m-le" type="number" placeholder="60"></div>
+          <div><label>Notes</label><input id="m-n" placeholder="Post-workout, morning..."></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button class="btn-c" onclick="saveMeas()">Save</button>
+          <button class="btn-g" onclick="document.getElementById('meas-form').classList.remove('open')">Cancel</button>
+        </div>
+      </div>
+      <div id="meas-list"></div>
+    </div>
+
+    <!-- COACH -->
+    <div id="panel-coach" class="panel">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div>
+          <div style="background:#0d0f16;border:1px solid rgba(6,182,212,.15);border-radius:14px;padding:24px">
+            <label>Goal</label><select id="ai-g"><option>Muscle Gain (bulk)</option><option>Fat Loss (cut)</option><option>Body Recomp</option><option>Strength / Powerlifting</option><option>Athletic Performance</option></select>
+            <label>Current Stats</label><textarea id="ai-s" rows="3" placeholder="78kg, 180cm, 16% BF, training 4x/week, 8 months exp, bench 90kg, squat 110kg..."></textarea>
+            <label>Last Workout</label><textarea id="ai-w" rows="2" placeholder="Push day: Bench 4×8 90kg, Incline 3×10 26kg DB..."></textarea>
+            <label>Main Issue</label><input id="ai-i" placeholder="Bench plateau for 3 weeks, struggling to recover...">
+            <button class="btn-c" style="width:100%;margin-top:16px;padding:13px" onclick="getCoach()">🤖 Get AI Coaching</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Coaching Feedback</div>
+          <div class="ai-out" id="coach-out">
+            <div style="color:rgba(255,255,255,.2);text-align:center;padding:48px 0"><div style="font-size:40px;margin-bottom:12px">🏋️</div>Fill in your stats to receive personalized coaching</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLAN -->
+    <div id="panel-plan" class="panel">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div style="background:#0d0f16;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:24px">
+          <div class="g2" style="margin-bottom:4px">
+            <div><label>Goal</label><select id="pl-g"><option>Muscle Gain</option><option>Fat Loss</option><option>Strength</option><option>Endurance</option><option>Recomp</option></select></div>
+            <div><label>Days/week</label><select id="pl-d"><option value="3">3 days</option><option value="4">4 days</option><option value="5" selected>5 days</option><option value="6">6 days</option></select></div>
+            <div><label>Level</label><select id="pl-l"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
+            <div><label>Equipment</label><select id="pl-e"><option>Full Gym</option><option>Home + Dumbbells</option><option>Bodyweight</option><option>Barbell Only</option></select></div>
+          </div>
+          <label>Limitations / Injuries</label>
+          <input id="pl-lim" placeholder="Bad knees, shoulder injury...">
+          <button class="btn-c" style="width:100%;margin-top:16px;padding:13px" onclick="genPlan()">📋 Generate 4-Week Plan</button>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Your Program</div>
+          <div class="ai-out" id="plan-out" style="max-height:440px;overflow-y:auto">
+            <div style="color:rgba(255,255,255,.2);text-align:center;padding:48px 0"><div style="font-size:40px;margin-bottom:12px">📋</div>Set your preferences to generate a full program</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <script>
-const SUPABASE_URL='https://nmulrsbqdeqokvrybapn.supabase.co'
-const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tdWxyc2JxZGVxb2t2cnliYXBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyODY0NDcsImV4cCI6MjA5NDg2MjQ0N30.iGN_OGVkw0j3VCEi9qUroMbpT37P3UPRUf1cYyqFBys'
-const GROQ_KEY='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'
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+const SB=supabase.createClient('https://nmulrsbqdeqokvrybapn.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tdWxyc2JxZGVxb2t2cnliYXBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyODY0NDcsImV4cCI6MjA5NDg2MjQ0N30.iGN_OGVkw0j3VCEi9qUroMbpT37P3UPRUf1cYyqFBys')
+const GROQ='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'
+const panelTitles={workout:['Workout Log','Track every session to unlock insights'],progress:['Body Progress','Track your measurements over time'],coach:['AI Coach 🤖','Get personalized feedback on your training'],plan:['Generate Plan 📋','AI creates your full 4-week program']}
 
-function showToast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className=`fixed bottom-6 right-6 px-6 py-3 rounded-xl font-semibold z-50 text-white ${type==='error'?'bg-red-600':'bg-cyan-600'}`;setTimeout(()=>t.classList.add('hidden'),3000)}
-function showTab(tab){['workout','progress','coach','plan'].forEach(t=>{document.getElementById(`panel-${t}`).classList.add('hidden');document.getElementById(`tab-${t}`).classList.remove('tab-active')});document.getElementById(`panel-${tab}`).classList.remove('hidden');document.getElementById(`tab-${tab}`).classList.add('tab-active');if(tab==='workout')loadWorkouts();if(tab==='progress')loadMeasurements()}
-function toggleForm(id){document.getElementById(id).classList.toggle('hidden')}
+function showNav(t){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.s-nav').forEach(n=>n.classList.remove('active'));document.getElementById('panel-'+t).classList.add('active');document.getElementById('nav-'+t).classList.add('active');document.getElementById('panel-title').textContent=panelTitles[t][0];document.getElementById('panel-sub').textContent=panelTitles[t][1];document.getElementById('top-cta').style.display=t==='workout'?'':'none';if(t==='workout')loadWorkouts();if(t==='progress')loadMeas()}
 
-async function saveWorkout(){
-  const d={type:document.getElementById('wk-type').value,duration:parseInt(document.getElementById('wk-dur').value)||null,exercises:document.getElementById('wk-ex').value,total_volume:parseFloat(document.getElementById('wk-vol').value)||null,calories:parseInt(document.getElementById('wk-cal').value)||null,notes:document.getElementById('wk-notes').value,rating:parseInt(document.getElementById('wk-rate').value)}
-  if(!d.type){showToast('Select workout type','error');return}
-  const{error}=await sb.from('an_workouts').insert(d)
-  if(error){showToast('Error: '+error.message,'error');return}
-  showToast('💪 Workout logged!');toggleForm('wk-form');loadWorkouts()
-}
+const typeBg={Push:'rgba(239,68,68,.15)|#ef4444',Pull:'rgba(59,130,246,.15)|#3b82f6',Legs:'rgba(234,179,8,.15)|#eab308',Cardio:'rgba(245,158,11,.15)|#f59e0b',HIIT:'rgba(239,68,68,.15)|#ef4444','Full Body':'rgba(6,182,212,.15)|#06b6d4',Core:'rgba(16,185,129,.15)|#10b981','Upper Body':'rgba(139,92,246,.15)|#8b5cf6'}
 
-async function saveMeasurement(){
-  const d={weight:parseFloat(document.getElementById('m-weight').value)||null,body_fat:parseFloat(document.getElementById('m-bf').value)||null,chest:parseInt(document.getElementById('m-chest').value)||null,waist:parseInt(document.getElementById('m-waist').value)||null,hips:parseInt(document.getElementById('m-hips').value)||null,arms:parseInt(document.getElementById('m-arms').value)||null,legs:parseInt(document.getElementById('m-legs').value)||null,notes:document.getElementById('m-notes').value}
-  const{error}=await sb.from('an_measurements').insert(d)
-  if(error){showToast('Error: '+error.message,'error');return}
-  showToast('✅ Measurements saved!');toggleForm('meas-form');loadMeasurements()
+async function seedData(){
+  const{data}=await SB.from('an_workouts').select('id').limit(1)
+  if(data?.length)return
+  await SB.from('an_workouts').insert([
+    {type:'Push',duration:68,exercises:'Bench 4×8 90kg, Incline DB 3×10 26kg, Cable Fly 3×15 15kg, Tricep Pushdown 4×12',total_volume:4800,calories:490,notes:'New PR on bench! Felt incredible. Best session in 2 months.',rating:5},
+    {type:'Pull',duration:62,exercises:'Deadlift 4×5 120kg, Pull-ups 4×8, Barbell Row 3×10 70kg, Face Pulls 3×15',total_volume:5200,calories:520,notes:'Deadlift felt heavy but moved it. Grip gave out on last set.',rating:4},
+    {type:'Legs',duration:75,exercises:'Squat 4×6 110kg, Leg Press 4×12 200kg, RDL 3×10 80kg, Leg Curl 3×12',total_volume:7200,calories:580,notes:'Brutal. Couldn\'t walk properly after. Progress is progress.',rating:3},
+    {type:'Full Body',duration:55,exercises:'Power Clean 4×3 70kg, Push Press 3×5 65kg, Pull-ups 3×8, Farmer Carry 4×20m',total_volume:3800,calories:440,notes:'Athletic session. Felt like an athlete today.',rating:4},
+  ])
+  await SB.from('an_measurements').insert([
+    {weight:78.5,body_fat:16.2,chest:102,waist:83,hips:97,arms:38,legs:60,notes:'Start of cut phase'},
+    {weight:77.8,body_fat:15.8,chest:101,waist:82,hips:96,arms:38,legs:60,notes:'-0.7kg in 2 weeks. On track.'},
+  ])
 }
 
 async function loadWorkouts(){
-  const{data}=await sb.from('an_workouts').select('*').order('created_at',{ascending:false})
+  const{data}=await SB.from('an_workouts').select('*').order('created_at',{ascending:false})
   if(data?.length){
     document.getElementById('s-sessions').textContent=data.length
-    document.getElementById('s-volume').textContent=Math.round(data.reduce((s,w)=>s+(w.total_volume||0),0)).toLocaleString()
-    document.getElementById('s-calories').textContent=Math.round(data.reduce((s,w)=>s+(w.calories||0),0)).toLocaleString()
-    const durs=data.filter(w=>w.duration);document.getElementById('s-avg-dur').textContent=durs.length?Math.round(durs.reduce((s,w)=>s+w.duration,0)/durs.length):0
+    document.getElementById('s-volume').textContent=(data.reduce((s,w)=>s+(w.total_volume||0),0)/1000).toFixed(1)+'t'
+    document.getElementById('s-cal').textContent=data.reduce((s,w)=>s+(w.calories||0),0).toLocaleString()
+    const d=data.filter(w=>w.duration);document.getElementById('s-dur').textContent=d.length?Math.round(d.reduce((s,w)=>s+w.duration,0)/d.length)+'m':'—'
   }
   const list=document.getElementById('workouts-list')
-  if(!data?.length){list.innerHTML='<div class="glass rounded-xl p-8 text-center text-slate-400"><span class="text-4xl block mb-3">💪</span>No sessions logged yet</div>';return}
-  const stars=n=>'⭐'.repeat(n||3)
-  list.innerHTML=data.map(w=>`<div class="workout-card"><div class="flex justify-between items-start mb-3"><div><h3 class="font-bold text-lg">${w.type} Day</h3><div class="flex gap-3 text-sm text-slate-400 mt-0.5">${w.duration?`<span><i class="fas fa-clock mr-1 text-cyan-400"></i>${w.duration}min</span>`:''} ${w.total_volume?`<span><i class="fas fa-weight-hanging mr-1 text-blue-400"></i>${w.total_volume.toLocaleString()}kg</span>`:''} ${w.calories?`<span><i class="fas fa-fire mr-1 text-orange-400"></i>${w.calories} kcal</span>`:''}</div></div><div class="flex items-center gap-3">${w.rating?`<span class="text-sm">${stars(w.rating)}</span>`:''}<button onclick="deleteRec('an_workouts','${w.id}',loadWorkouts)" class="text-slate-600 hover:text-red-400"><i class="fas fa-trash text-sm"></i></button></div></div>${w.exercises?`<p class="text-xs text-slate-400">${w.exercises.substring(0,120)}${w.exercises.length>120?'...':''}</p>`:''} ${w.notes?`<p class="text-xs text-slate-500 mt-2 italic">"${w.notes}"</p>`:''}<p class="text-xs text-slate-600 mt-2">${new Date(w.created_at).toLocaleDateString()}</p></div>`).join('')
+  if(!data?.length){list.innerHTML='<div style="color:rgba(255,255,255,.3);text-align:center;padding:48px">No sessions logged yet</div>';return}
+  list.innerHTML=data.map(w=>{
+    const[bg,c]=(typeBg[w.type]||'rgba(6,182,212,.15)|#06b6d4').split('|')
+    return`<div class="wk-card">
+      <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="type-badge" style="background:${bg};color:${c}">${w.type}</span>
+          <div>
+            <div style="display:flex;gap:12px;font-size:13px;color:rgba(255,255,255,.4)">
+              ${w.duration?`<span>⏱ ${w.duration}min</span>`:''}
+              ${w.total_volume?`<span>🏋️ ${w.total_volume.toLocaleString()}kg</span>`:''}
+              ${w.calories?`<span>🔥 ${w.calories} kcal</span>`:''}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${w.rating?`<span style="font-size:13px">${'⭐'.repeat(w.rating)}</span>`:''}
+        </div>
+      </div>
+      ${w.exercises?`<div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:8px">${w.exercises}</div>`:''}
+      ${w.notes?`<div style="font-size:13px;color:rgba(255,255,255,.35);font-style:italic">"${w.notes}"</div>`:''}
+    </div>`}).join('')
 }
 
-async function loadMeasurements(){
-  const{data}=await sb.from('an_measurements').select('*').order('created_at',{ascending:false})
-  const list=document.getElementById('measurements-list')
-  if(!data?.length){list.innerHTML='<div class="glass rounded-xl p-8 text-center text-slate-400"><span class="text-4xl block mb-3">📏</span>No measurements yet</div>';return}
-  list.innerHTML=data.map(m=>`<div class="workout-card"><div class="flex justify-between items-start mb-3"><h3 class="font-bold">${new Date(m.created_at).toLocaleDateString()}</h3><button onclick="deleteRec('an_measurements','${m.id}',loadMeasurements)" class="text-slate-600 hover:text-red-400"><i class="fas fa-trash text-sm"></i></button></div><div class="grid grid-cols-4 gap-3 text-center">${m.weight?`<div class="glass rounded-lg p-3"><div class="text-xl font-black text-cyan-400">${m.weight}</div><div class="text-xs text-slate-500">kg</div></div>`:''} ${m.body_fat?`<div class="glass rounded-lg p-3"><div class="text-xl font-black text-blue-400">${m.body_fat}%</div><div class="text-xs text-slate-500">Body Fat</div></div>`:''} ${m.chest?`<div class="glass rounded-lg p-3"><div class="text-xl font-black text-purple-400">${m.chest}</div><div class="text-xs text-slate-500">Chest cm</div></div>`:''} ${m.waist?`<div class="glass rounded-lg p-3"><div class="text-xl font-black text-pink-400">${m.waist}</div><div class="text-xs text-slate-500">Waist cm</div></div>`:''}</div></div>`).join('')
+async function saveWorkout(){
+  const d={type:document.getElementById('wk-type').value,duration:parseInt(document.getElementById('wk-dur').value)||null,exercises:document.getElementById('wk-ex').value,total_volume:parseFloat(document.getElementById('wk-vol').value)||null,calories:parseInt(document.getElementById('wk-cal').value)||null,notes:document.getElementById('wk-notes').value,rating:parseInt(document.getElementById('wk-rate').value)}
+  await SB.from('an_workouts').insert(d);document.getElementById('wk-form').classList.remove('open');loadWorkouts()
+}
+
+async function loadMeas(){
+  const{data}=await SB.from('an_measurements').select('*').order('created_at',{ascending:false})
+  const list=document.getElementById('meas-list')
+  if(!data?.length){list.innerHTML='<div style="color:rgba(255,255,255,.3);text-align:center;padding:48px">No measurements logged</div>';return}
+  list.innerHTML=data.map(m=>`<div class="meas-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <div style="font-weight:700">${new Date(m.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+      ${m.notes?`<div style="font-size:12px;color:rgba(255,255,255,.4);font-style:italic">${m.notes}</div>`:''}
+    </div>
+    <div class="meas-grid">
+      ${m.weight?`<div class="meas-item"><div style="font-size:20px;font-weight:800;color:#06b6d4">${m.weight}</div><div style="font-size:10px;color:rgba(255,255,255,.35)">kg</div></div>`:''}
+      ${m.body_fat?`<div class="meas-item"><div style="font-size:20px;font-weight:800;color:#4ade80">${m.body_fat}%</div><div style="font-size:10px;color:rgba(255,255,255,.35)">Body Fat</div></div>`:''}
+      ${m.chest?`<div class="meas-item"><div style="font-size:20px;font-weight:800;color:#a855f7">${m.chest}</div><div style="font-size:10px;color:rgba(255,255,255,.35)">Chest cm</div></div>`:''}
+      ${m.waist?`<div class="meas-item"><div style="font-size:20px;font-weight:800;color:#fb923c">${m.waist}</div><div style="font-size:10px;color:rgba(255,255,255,.35)">Waist cm</div></div>`:''}
+    </div>
+  </div>`).join('')
+}
+
+async function saveMeas(){
+  const d={weight:parseFloat(document.getElementById('m-w').value)||null,body_fat:parseFloat(document.getElementById('m-bf').value)||null,chest:parseInt(document.getElementById('m-ch').value)||null,waist:parseInt(document.getElementById('m-wa').value)||null,hips:parseInt(document.getElementById('m-hi').value)||null,arms:parseInt(document.getElementById('m-ar').value)||null,legs:parseInt(document.getElementById('m-le').value)||null,notes:document.getElementById('m-n').value}
+  await SB.from('an_measurements').insert(d);document.getElementById('meas-form').classList.remove('open');loadMeas()
 }
 
 async function aiCall(prompt,el){
-  el.innerHTML='<div class="flex items-center gap-3 text-cyan-400"><div class="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-400"></div><span>AI thinking...</span></div>'
-  try{
-    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:1000,messages:[{role:'user',content:prompt}]})})
-    const data=await res.json()
-    el.innerHTML=`<div class="text-sm text-slate-300 whitespace-pre-line leading-relaxed">${(data.choices?.[0]?.message?.content||'').replace(/\*\*(.*?)\*\*/g,'<strong class="text-cyan-400">$1</strong>').replace(/\n/g,'<br>')}</div>`
-  }catch(e){el.innerHTML='<p class="text-red-400">Error: '+e.message+'</p>'}
+  el.innerHTML='<div style="color:#06b6d4;text-align:center;padding:30px">⚡ AI thinking...</div>'
+  const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ},body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:800,messages:[{role:'user',content:prompt}]})})
+  const d=await res.json()
+  el.innerHTML=`<div style="font-size:14px;line-height:1.8">${(d.choices?.[0]?.message?.content||'').replace(/\*\*(.*?)\*\*/g,'<strong style="color:#06b6d4">$1</strong>').replace(/\n/g,'<br>')}</div>`
 }
 
-async function getCoaching(){
-  const goal=document.getElementById('ai-goal').value,stats=document.getElementById('ai-stats').value,workout=document.getElementById('ai-workout').value,issue=document.getElementById('ai-issue').value
-  if(!stats){showToast('Fill your stats','error');return}
-  await aiCall(`You are an elite personal trainer and sports scientist.\n\nGoal: ${goal}\nStats: ${stats}\nLast workout: ${workout}\nIssue: ${issue}\n\nProvide:\n1. TRAINING ASSESSMENT\n2. TOP 3 FIXES for this week\n3. NUTRITION tip\n4. RECOVERY advice\n5. NEXT WORKOUT suggestion with exact sets/reps\n\nBe direct and specific.`,document.getElementById('coach-result'))
-}
+async function getCoach(){await aiCall(`You are an elite personal trainer.\n\nGoal: ${document.getElementById('ai-g').value}\nStats: ${document.getElementById('ai-s').value}\nLast workout: ${document.getElementById('ai-w').value}\nIssue: ${document.getElementById('ai-i').value}\n\nProvide:\n**ASSESSMENT:**\n**TOP 3 FIXES this week:**\n1.\n2.\n3.\n**NUTRITION TIP:**\n**RECOVERY:**\n**NEXT WORKOUT (exact sets/reps):**\n\nBe direct and specific.`,document.getElementById('coach-out'))}
+async function genPlan(){await aiCall(`Create a 4-week training program.\n\nGoal: ${document.getElementById('pl-g').value}\nDays/week: ${document.getElementById('pl-d').value}\nLevel: ${document.getElementById('pl-l').value}\nEquipment: ${document.getElementById('pl-e').value}\nLimitations: ${document.getElementById('pl-lim').value||'None'}\n\nInclude week structure, daily sessions with exercises/sets/reps, progressive overload notes, and deload week.`,document.getElementById('plan-out'))}
 
-async function generatePlan(){
-  const goal=document.getElementById('pl-goal').value,days=document.getElementById('pl-days').value,level=document.getElementById('pl-level').value,equip=document.getElementById('pl-equip').value,limits=document.getElementById('pl-limits').value
-  await aiCall(`Create a complete 4-week training program.\n\nGoal: ${goal}\nDays/week: ${days}\nLevel: ${level}\nEquipment: ${equip}\n${limits?'Limitations: '+limits:''}\n\nInclude:\n- Weekly split structure\n- Day-by-day exercises with sets/reps/rest\n- Progressive overload tips\n- Deload week guidance\n\nFormat clearly with Week 1, Day 1 etc.`,document.getElementById('plan-result'))
-}
-
-async function deleteRec(table,id,reload){if(!confirm('Delete?'))return;await sb.from(table).delete().eq('id',id);reload()}
-loadWorkouts()
+async function init(){await seedData();loadWorkouts()}
+init()
 </script>
 </body>
 </html>
